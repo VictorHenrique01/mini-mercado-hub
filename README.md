@@ -1,73 +1,155 @@
-# Welcome to your Lovable project
+# Sistema de Gestão de Estoque e Vendas - Frontend
 
-## Project info
+Frontend em React + Vite + TailwindCSS para sistema de gestão de mini mercados.
 
-**URL**: https://lovable.dev/projects/394a96d0-5331-4781-8906-ce0dadf83b6f
+## 🚀 Como Rodar
 
-## How can I edit this code?
+```bash
+# Instalar dependências
+npm install
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/394a96d0-5331-4781-8906-ce0dadf83b6f) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Rodar em modo desenvolvimento (porta 8080)
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Acesse: `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Estrutura do Projeto
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Componentes reutilizáveis
+│   ├── ui/             # Componentes shadcn/ui
+│   ├── Navbar.tsx      # Barra de navegação
+│   └── ProtectedRoute.tsx # Proteção de rotas autenticadas
+├── contexts/           # Contextos React
+│   └── AuthContext.tsx # Gerenciamento de autenticação
+├── mocks/              # Dados mockados para testes
+│   ├── mockData.ts     # Dados estáticos (produtos, vendas, etc)
+│   └── mockApi.ts      # Simulação de API (TEMPORÁRIO)
+├── pages/              # Páginas da aplicação
+│   ├── Register.tsx    # Cadastro de novo usuário
+│   ├── Activate.tsx    # Ativação de conta via código
+│   ├── Login.tsx       # Login
+│   ├── Dashboard.tsx   # Painel principal
+│   ├── Products.tsx    # Gestão de estoque
+│   ├── Sales.tsx       # Registro de vendas
+│   ├── Profile.tsx     # Perfil do usuário
+│   └── Reports.tsx     # Relatórios
+├── services/           # Serviços e integrações
+│   └── api.ts          # Configuração Axios (PRONTO PARA INTEGRAÇÃO)
+├── types/              # Tipos TypeScript
+│   └── index.ts        # Interfaces e tipos
+└── App.tsx             # Rotas e configuração principal
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔄 Status Atual: MODO MOCK
 
-## What technologies are used for this project?
+**O frontend está rodando com dados mockados para testes independentes.**
 
-This project is built with:
+### Para Integrar com o Backend Real:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Configure a URL do backend** em `.env`:
+```bash
+VITE_API_URL=http://localhost:5000
+```
 
-## How can I deploy this project?
+2. **Troque os imports mockados pelos reais** em cada página:
 
-Simply open [Lovable](https://lovable.dev/projects/394a96d0-5331-4781-8906-ce0dadf83b6f) and click on Share -> Publish.
+**Antes (mock):**
+```typescript
+// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
+import { mockAuthAPI as authAPI } from '@/mocks/mockApi';
+```
 
-## Can I connect a custom domain to my Lovable project?
+**Depois (real):**
+```typescript
+import { authAPI } from '@/services/api';
+```
 
-Yes, you can!
+3. **Arquivos que precisam dessa mudança:**
+   - `src/pages/Register.tsx` - linha ~8
+   - `src/pages/Activate.tsx` - linha ~8
+   - `src/pages/Login.tsx` - linha ~8
+   - `src/pages/Profile.tsx` - linha ~11
+   - `src/pages/Dashboard.tsx` - linha ~9
+   - `src/pages/Products.tsx` - linha ~21
+   - `src/pages/Sales.tsx` - linha ~18
+   - `src/pages/Reports.tsx` - linha ~9
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+4. **Rotas do Backend Flask esperadas:**
+   - `POST /api/users/register` - Cadastro
+   - `POST /api/users/activate` - Ativação
+   - `POST /api/users/login` - Login (retorna JWT)
+   - `GET /api/users/:id` - Buscar usuário
+   - `PUT /api/users/:id` - Atualizar usuário
+   - `POST /api/users/:id/inactivate` - Inativar conta
+   - `GET /produtos` - Listar produtos
+   - `POST /produtos` - Criar produto
+   - `PUT /produtos/:id` - Atualizar produto
+   - `DELETE /produtos/:id` - Deletar produto
+   - `GET /vendas` - Listar vendas
+   - `POST /vendas` - Registrar venda
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🔐 Autenticação
+
+O sistema usa JWT armazenado no `localStorage`.
+
+**Credenciais para teste (modo mock - aceita qualquer valor):**
+- Email: qualquer@email.com
+- Senha: qualquersenha
+- Código de ativação: 1234 (ou qualquer 4 dígitos)
+
+## 📦 Tecnologias
+
+- **React 18** + **TypeScript**
+- **Vite** - Build tool
+- **TailwindCSS** - Estilização
+- **shadcn/ui** - Componentes
+- **React Router** - Roteamento
+- **Axios** - Requisições HTTP
+- **Sonner** - Notificações toast
+- **Lucide React** - Ícones
+
+## 🎨 Páginas Disponíveis
+
+- `/` - Landing page
+- `/auth/register` - Cadastro
+- `/auth/activate` - Ativação
+- `/auth/login` - Login
+- `/dashboard` - Painel principal (protegida)
+- `/products` - Gestão de estoque (protegida)
+- `/sales` - Registro de vendas (protegida)
+- `/profile` - Perfil do usuário (protegida)
+- `/reports` - Relatórios (protegida)
+
+## ⚙️ Integração com Docker
+
+Quando integrar com o backend Flask, ajuste seu `docker-compose.yml`:
+
+```yaml
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://backend:5000
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://...
+```
+
+## 📝 Notas Importantes
+
+- ✅ O arquivo `src/services/api.ts` já está configurado com interceptors JWT
+- ✅ Todas as rotas protegidas redirecionam para login se não autenticado
+- ✅ O sistema de autenticação está completo (login, logout, proteção de rotas)
+- ✅ Todos os comentários `TODO: INTEGRAÇÃO` indicam pontos de integração
+- 🔄 Atualmente em **modo mock** - dados não são persistidos

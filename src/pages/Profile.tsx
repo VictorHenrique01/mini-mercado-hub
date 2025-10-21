@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { usersAPI } from '@/services/api';
+// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
+import { mockUsersAPI as usersAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
 
 export default function Profile() {

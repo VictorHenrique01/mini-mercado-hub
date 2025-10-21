@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { productsAPI } from '@/services/api';
+// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
+import { mockProductsAPI as productsAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
 import type { Product } from '@/types';
 
