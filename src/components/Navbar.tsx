@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Store, Package, ShoppingCart, LogOut } from 'lucide-react';
+import { Store, Package, ShoppingCart, LogOut, User, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -44,7 +44,7 @@ export const Navbar = () => {
                   className="gap-2"
                 >
                   <Package className="h-4 w-4" />
-                  Produtos
+                  Estoque
                 </Button>
               </Link>
 
@@ -58,13 +58,32 @@ export const Navbar = () => {
                   Vendas
                 </Button>
               </Link>
+
+              <Link to="/reports">
+                <Button
+                  variant={isActive('/reports') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Relatórios
+                </Button>
+              </Link>
             </div>
           </div>
 
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link to="/profile">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <User className="h-4 w-4" />
+                Perfil
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
         </div>
       </div>
     </nav>

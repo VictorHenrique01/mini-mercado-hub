@@ -36,17 +36,35 @@ api.interceptors.response.use(
 // Auth APIs
 export const authAPI = {
   register: async (data: RegisterData) => {
-    const response = await api.post('/sellers', data);
+    const response = await api.post('/api/users/register', data);
     return response.data;
   },
 
   activate: async (data: ActivateData) => {
-    const response = await api.post('/sellers/activate', data);
+    const response = await api.post('/api/users/activate', data);
     return response.data;
   },
 
   login: async (data: LoginData) => {
-    const response = await api.post<AuthResponse>('/auth/login', data);
+    const response = await api.post('/api/users/login', data);
+    return response.data;
+  },
+};
+
+// Users APIs
+export const usersAPI = {
+  getById: async (id: number) => {
+    const response = await api.get(`/api/users/${id}`);
+    return response.data;
+  },
+
+  update: async (id: number, data: Partial<RegisterData>) => {
+    const response = await api.put(`/api/users/${id}`, data);
+    return response.data;
+  },
+
+  inactivate: async (id: number) => {
+    const response = await api.post(`/api/users/${id}/inactivate`);
     return response.data;
   },
 };
