@@ -2,8 +2,7 @@ import axios from 'axios';
 import type { AuthResponse, RegisterData, LoginData, ActivateData, Product, Sale } from '@/types';
 
 // Configure a URL base do seu backend aqui
-// Esta linha está CORRETA. Ela vai ler a variável do Vercel.
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://estoque-web.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -34,38 +33,38 @@ api.interceptors.response.use(
   }
 );
 
-// Auth APIs (Estavam corretas)
+// Auth APIs
 export const authAPI = {
   register: async (data: RegisterData) => {
-    const response = await api.post('/api/users/register', data);
+    const response = await api.post('/register', data);
     return response.data;
   },
 
   activate: async (data: ActivateData) => {
-    const response = await api.post('/api/users/activate', data);
+    const response = await api.post('/activate', data);
     return response.data;
   },
 
   login: async (data: LoginData) => {
-    const response = await api.post('/api/users/login', data);
+    const response = await api.post('/login', data);
     return response.data;
   },
 };
 
-// Users APIs (Estavam corretas)
+// Users APIs
 export const usersAPI = {
   getById: async (id: number) => {
-    const response = await api.get(`/api/users/${id}`);
+    const response = await api.get(`/user/${id}`);
     return response.data;
   },
 
   update: async (id: number, data: Partial<RegisterData>) => {
-    const response = await api.put(`/api/users/${id}`, data);
+    const response = await api.put(`/user/${id}`, data);
     return response.data;
   },
 
   inactivate: async (id: number) => {
-    const response = await api.post(`/api/users/${id}/inactivate`);
+    const response = await api.post(`/user/${id}/inactivate`);
     return response.data;
   },
 };
