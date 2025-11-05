@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AuthResponse, RegisterData, LoginData, ActivateData, Product, Sale } from '@/types';
 
 // Configure a URL base do seu backend aqui
+// Esta linha está CORRETA. Ela vai ler a variável do Vercel.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const api = axios.create({
@@ -33,7 +34,7 @@ api.interceptors.response.use(
   }
 );
 
-// Auth APIs
+// Auth APIs (Estavam corretas)
 export const authAPI = {
   register: async (data: RegisterData) => {
     const response = await api.post('/api/users/register', data);
@@ -51,7 +52,7 @@ export const authAPI = {
   },
 };
 
-// Users APIs
+// Users APIs (Estavam corretas)
 export const usersAPI = {
   getById: async (id: number) => {
     const response = await api.get(`/api/users/${id}`);
@@ -69,45 +70,53 @@ export const usersAPI = {
   },
 };
 
-// Products APIs
+// Products APIs (--- CORRIGIDO ---)
 export const productsAPI = {
   getAll: async () => {
-    const response = await api.get<Product[]>('/produtos');
+    // Adicionado o prefixo /api/products
+    const response = await api.get<Product[]>('/api/products');
     return response.data;
   },
 
   getById: async (id: number) => {
-    const response = await api.get<Product>(`/produtos/${id}`);
+    // Adicionado o prefixo /api/products
+    const response = await api.get<Product>(`/api/products/${id}`);
     return response.data;
   },
 
   create: async (data: Partial<Product>) => {
-    const response = await api.post<Product>('/produtos', data);
+    // Adicionado o prefixo /api/products
+    const response = await api.post<Product>('/api/products', data);
     return response.data;
   },
 
   update: async (id: number, data: Partial<Product>) => {
-    const response = await api.put<Product>(`/produtos/${id}`, data);
+    // Adicionado o prefixo /api/products
+    const response = await api.put<Product>(`/api/products/${id}`, data);
     return response.data;
   },
 
   delete: async (id: number) => {
-    const response = await api.delete(`/produtos/${id}`);
+    // Adicionado o prefixo /api/products
+    const response = await api.delete(`/api/products/${id}`);
     return response.data;
   },
 };
 
-// Sales APIs
+// Sales APIs (--- CORRIGIDO ---)
 export const salesAPI = {
   getAll: async () => {
-    const response = await api.get<Sale[]>('/vendas');
+    // Adicionado o prefixo /api/vendas (ou /api/sales, dependendo do seu backend)
+    const response = await api.get<Sale[]>('/api/vendas');
     return response.data;
   },
 
   create: async (data: { produto_id: number; quantidade: number }) => {
-    const response = await api.post<Sale>('/vendas', data);
+    // Adicionado o prefixo /api/vendas
+    const response = await api.post<Sale>('/api/vendas', data);
     return response.data;
   },
 };
 
 export default api;
+
