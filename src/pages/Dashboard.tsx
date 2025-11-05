@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Package, ShoppingCart, DollarSign, TrendingUp } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
-import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
+import { productsAPI, salesAPI } from '@/services/api';
 import type { Product, Sale } from '@/types';
 
 export default function Dashboard() {
