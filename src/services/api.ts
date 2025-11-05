@@ -54,17 +54,17 @@ export const authAPI = {
 // Users APIs
 export const usersAPI = {
   getById: async (id: number) => {
-    const response = await api.get(`/user/${id}`);
+    const response = await api.get(`/api/users/${id}`);
     return response.data;
   },
 
   update: async (id: number, data: Partial<RegisterData>) => {
-    const response = await api.put(`/user/${id}`, data);
+    const response = await api.put(`/api/users/${id}`, data);
     return response.data;
   },
 
   inactivate: async (id: number) => {
-    const response = await api.post(`/user/${id}/inactivate`);
+    const response = await api.post(`/api/users/${id}/inactivate`);
     return response.data;
   },
 };
