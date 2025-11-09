@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -20,61 +20,68 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useQueries, useMutation, useQueryClient } from '@tanstack/react-query'; // Importados
 // TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
 import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
 import type { Product, Sale } from '@/types';
 
 export default function Sales() {
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient(); // 🎣 Hook para interagir com o cache
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     produto_id: '',
     quantidade: '',
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // 🚀 Usando useQueries para carregar vendas e produtos em paralelo
+  const results = useQueries({
+    queries: [
+      { queryKey: ['sales'], queryFn: salesAPI.getAll },
+      { queryKey: ['products'], queryFn: productsAPI.getAll },
+    ],
+  });
 
-  const loadData = async () => {
-    try {
-      const [salesData, productsData] = await Promise.all([
-        salesAPI.getAll(),
-        productsAPI.getAll(),
-      ]);
-      setSales(salesData);
-      setProducts(productsData.filter((p) => p.status === 'Ativo'));
-    } catch (error) {
-      toast.error('Erro ao carregar dados');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const salesQuery = results[0];
+  const productsQuery = results[1];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const sales: Sale[] = salesQuery.data || [];
+  const allProducts: Product[] = productsQuery.data || [];
+  const products = allProducts.filter((p) => p.status === 'Ativo'); // Filtra apenas ativos
+  const loading = salesQuery.isLoading || productsQuery.isLoading;
+  const isError = salesQuery.isError || productsQuery.isError;
+
+  // 🔄 UseMutation para registrar a venda
+  const saleMutation = useMutation({
+    mutationFn: salesAPI.create,
+    onSuccess: () => {
+      toast.success('Venda registrada com sucesso!');
+      setDialogOpen(false);
+      setFormData({ produto_id: '', quantidade: '' });
+      
+      // ♻️ Invalida as queries de vendas e produtos para forçar um recarregamento
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Erro ao registrar venda');
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const saleData = {
       produto_id: parseInt(formData.produto_id),
       quantidade: parseInt(formData.quantidade),
     };
-
-    try {
-      await salesAPI.create(saleData);
-      toast.success('Venda registrada com sucesso!');
-      setDialogOpen(false);
-      setFormData({ produto_id: '', quantidade: '' });
-      loadData();
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Erro ao registrar venda');
-    }
+    
+    // 🚀 Chama a mutação
+    saleMutation.mutate(saleData);
   };
 
   const getProductName = (productId: number) => {
-    const product = products.find((p) => p.id === productId);
+    const product = allProducts.find((p) => p.id === productId);
     return product?.nome || `Produto #${productId}`;
   };
 
@@ -89,7 +96,16 @@ export default function Sales() {
             <p className="text-muted-foreground">Registre e acompanhe suas vendas</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) {
+                // Limpa o formulário ao fechar o diálogo
+                setFormData({ produto_id: '', quantidade: '' });
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -111,10 +127,15 @@ export default function Sales() {
                     onValueChange={(value) =>
                       setFormData({ ...formData, produto_id: value })
                     }
+                    disabled={saleMutation.isPending || productsQuery.isLoading}
                     required
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um produto" />
+                      <SelectValue 
+                        placeholder={
+                            productsQuery.isLoading ? "Carregando produtos..." : "Selecione um produto"
+                        } 
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {products.map((product) => (
@@ -138,6 +159,7 @@ export default function Sales() {
                     onChange={(e) =>
                       setFormData({ ...formData, quantidade: e.target.value })
                     }
+                    disabled={saleMutation.isPending}
                     required
                   />
                 </div>
@@ -147,10 +169,13 @@ export default function Sales() {
                     type="button"
                     variant="outline"
                     onClick={() => setDialogOpen(false)}
+                    disabled={saleMutation.isPending}
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit">Registrar Venda</Button>
+                  <Button type="submit" disabled={saleMutation.isPending}>
+                    {saleMutation.isPending ? 'Registrando...' : 'Registrar Venda'}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
@@ -160,6 +185,10 @@ export default function Sales() {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando vendas...</p>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-12 text-destructive">
+            <p>Não foi possível carregar o histórico de vendas. Tente novamente.</p>
           </div>
         ) : (
           <Card>

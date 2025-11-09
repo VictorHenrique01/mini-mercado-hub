@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMutation } from '@tanstack/react-query'; // Importado
 // TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
 import { mockAuthAPI as authAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: '',
     cnpj: '',
@@ -24,19 +24,23 @@ export default function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      await authAPI.register(formData);
+  // 🔄 UseMutation do React Query para gerenciar o estado da requisição de registro
+  const registerMutation = useMutation({
+    mutationFn: authAPI.register,
+    onSuccess: (data, variables) => {
+      // Data é o retorno da API, variables são os dados passados para authAPI.register
       toast.success('Cadastro realizado! Verifique o código enviado via WhatsApp.');
-      navigate('/auth/activate', { state: { email: formData.email } });
-    } catch (error: any) {
+      navigate('/auth/activate', { state: { email: variables.email } });
+    },
+    onError: (error: any) => {
       toast.error(error.response?.data?.detail || 'Erro ao realizar cadastro');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // 🚀 Chama a função de mutação
+    registerMutation.mutate(formData);
   };
 
   return (
@@ -115,8 +119,12 @@ export default function Register() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Cadastrando...' : 'Cadastrar'}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerMutation.isPending} // ✨ Usando o estado de carregamento do useMutation
+            >
+              {registerMutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
             </Button>
 
             <div className="text-center text-sm">

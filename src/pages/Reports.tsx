@@ -1,44 +1,45 @@
-import { useEffect, useState } from 'react';
 import { BarChart3, TrendingUp, Package, DollarSign } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQueries } from '@tanstack/react-query'; // Importado
 // TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
 import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
 import type { Product, Sale } from '@/types';
 
 export default function Reports() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 🚀 Usando useQueries para carregar produtos e vendas em paralelo
+  const results = useQueries({
+    queries: [
+      { queryKey: ['products'], queryFn: productsAPI.getAll },
+      { queryKey: ['sales'], queryFn: salesAPI.getAll },
+    ],
+  });
 
-  useEffect(() => {
-    loadReportsData();
-  }, []);
+  // Extrai os dados e estados
+  const productsQuery = results[0];
+  const salesQuery = results[1];
 
-  const loadReportsData = async () => {
-    try {
-      const [productsData, salesData] = await Promise.all([
-        productsAPI.getAll(),
-        salesAPI.getAll(),
-      ]);
-      setProducts(productsData);
-      setSales(salesData);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const products: Product[] = productsQuery.data || [];
+  const sales: Sale[] = salesQuery.data || [];
+  const loading = productsQuery.isLoading || salesQuery.isLoading;
+  const isError = productsQuery.isError || salesQuery.isError;
 
-  // Métricas gerais
+  if (isError) {
+    console.error('Erro ao carregar dados:', productsQuery.error || salesQuery.error);
+  }
+
+  // Métricas gerais (Cálculos permanecem os mesmos, agora sobre os dados do Query)
   const totalRevenue = sales.reduce((acc, s) => acc + s.valor_total, 0);
   const totalProducts = products.length;
   const activeProducts = products.filter((p) => p.status === 'Ativo').length;
   const totalStock = products.reduce((acc, p) => acc + p.quantidade, 0);
 
   // Produtos mais vendidos
-  const productSalesMap = new Map<number, { name: string; quantity: number; revenue: number }>();
-  
+  const productSalesMap = new Map<
+    number,
+    { name: string; quantity: number; revenue: number }
+  >();
+
   sales.forEach((sale) => {
     const product = products.find((p) => p.id === sale.produto_id);
     if (product) {
@@ -78,6 +79,10 @@ export default function Reports() {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando relatórios...</p>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-12 text-destructive">
+            <p>Não foi possível carregar os dados. Tente novamente.</p>
           </div>
         ) : (
           <div className="space-y-8">
