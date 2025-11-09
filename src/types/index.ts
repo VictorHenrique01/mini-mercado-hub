@@ -47,12 +47,12 @@ export interface RegisterData {
 }
 
 export interface LoginData {
-  email: string;
+  login: string;
   senha: string;
 }
 
 export interface ActivateData {
-  email: string;
+  cnpj: string;
   codigo: string;
 }
 

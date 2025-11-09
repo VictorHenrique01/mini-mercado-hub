@@ -27,7 +27,7 @@ export default function Products() {
     nome: '',
     preco: '',
     quantidade: '',
-    imagem: '',
+    imagem_url: '',
   });
 
   const { data: products = [], isLoading, error } = useQuery({
@@ -84,7 +84,7 @@ export default function Products() {
       nome: formData.nome,
       preco: parseFloat(formData.preco),
       quantidade: parseInt(formData.quantidade),
-      imagem: formData.imagem || undefined,
+      imagem_url: formData.imagem_url || undefined,
     };
 
     if (editingProduct) {
@@ -100,7 +100,7 @@ export default function Products() {
       nome: product.nome,
       preco: product.preco.toString(),
       quantidade: product.quantidade.toString(),
-      imagem: product.imagem || '',
+      imagem_url: product.imagem_url || '',
     });
     setDialogOpen(true);
   };
@@ -117,7 +117,7 @@ export default function Products() {
   };
 
   const resetForm = () => {
-    setFormData({ nome: '', preco: '', quantidade: '', imagem: '' });
+    setFormData({ nome: '', preco: '', quantidade: '', imagem_url: '' });
     setEditingProduct(null);
   };
 
@@ -195,12 +195,12 @@ export default function Products() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="imagem">URL da Imagem (opcional)</Label>
+                  <Label htmlFor="imagem_url">URL da Imagem (opcional)</Label>
                   <Input
-                    id="imagem"
-                    name="imagem"
+                    id="imagem_url"
+                    name="imagem_url"
                     type="url"
-                    value={formData.imagem}
+                    value={formData.imagem_url}
                     onChange={handleChange}
                     placeholder="https://exemplo.com/imagem.jpg"
                   />
@@ -255,10 +255,10 @@ export default function Products() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {product.imagem && (
+                  {product.imagem_url && (
                     <div className="mb-4">
                       <img 
-                        src={product.imagem} 
+                        src={product.imagem_url} 
                         alt={product.nome}
                         className="w-full h-32 object-cover rounded-md"
                         onError={(e) => {
