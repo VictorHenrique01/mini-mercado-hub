@@ -1,3 +1,4 @@
+import { useState } from 'react'; // ✅ ADICIONE ESTA LINHA
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Power } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';

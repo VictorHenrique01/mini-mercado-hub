@@ -1,3 +1,5 @@
+import { useState } from 'react'; // ✅ ADICIONE ESTA LINHA
+
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Store } from 'lucide-react';
