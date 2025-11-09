@@ -1,5 +1,4 @@
-import { useState } from 'react'; // ✅ ADICIONE ESTA LINHA
-
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Store } from 'lucide-react';
@@ -15,7 +14,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    login: '', // ✅ Mudado para 'login' (pode ser email ou cnpj)
+    login: '',
     senha: '',
   });
 
@@ -26,17 +25,47 @@ export default function Login() {
   const loginMutation = useMutation({
     mutationFn: authAPI.login,
     onSuccess: (data) => {
-      login(data.token, data.user || data.seller);
+      console.log('✅ Login success - Data received:', data);
+      
+      // ✅ VERIFIQUE O QUE A API ESTÁ RETORNANDO
+      if (!data.token) {
+        console.error('❌ No token in response:', data);
+        toast.error('Token não recebido da API');
+        return;
+      }
+
+      // ✅ VERIFIQUE SE TEM USER/SELLER
+      const sellerData = data.user || data.seller;
+      if (!sellerData) {
+        console.error('❌ No user/seller in response:', data);
+        toast.error('Dados do usuário não recebidos');
+        return;
+      }
+
+      console.log('🔑 Calling login function with:', {
+        token: data.token,
+        seller: sellerData
+      });
+
+      login(data.token, sellerData);
       toast.success('Login realizado com sucesso!');
+      
+      console.log('🚀 Navigating to /dashboard');
       navigate('/dashboard');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.erro || 'Erro ao fazer login');
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error message:', error.message);
+      
+      const errorMessage = error.response?.data?.erro || error.response?.data?.detail || error.message || 'Erro ao fazer login';
+      toast.error(errorMessage);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔄 Submitting login form:', formData);
     loginMutation.mutate(formData);
   };
 
