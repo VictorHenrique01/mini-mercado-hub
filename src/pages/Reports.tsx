@@ -1,7 +1,6 @@
 import { BarChart3, TrendingUp, Package, DollarSign } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useQueries } from '@tanstack/react-query'; // Importado
 // TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
 import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
 import type { Product, Sale } from '@/types';

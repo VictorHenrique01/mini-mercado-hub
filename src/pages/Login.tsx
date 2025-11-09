@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// 🚀 INTEGRAÇÃO: Usando API real
-import { authAPI } from '@/services/api'; 
+// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
+import { mockAuthAPI as authAPI } from '@/mocks/mockApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 

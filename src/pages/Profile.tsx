@@ -9,8 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 // 🚀 INTEGRAÇÃO: Usando AuthContext atualizado
 import { useAuth } from '@/contexts/AuthContext';
-// 🚀 INTEGRAÇÃO: Usando API real
-import { usersAPI } from '@/services/api';
+// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
+import { mockUsersAPI as usersAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
 
 export default function Profile() {

@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useQueries, useMutation, useQueryClient } from '@tanstack/react-query'; // Importados
 // TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
 import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
