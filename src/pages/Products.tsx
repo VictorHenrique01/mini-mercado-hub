@@ -1,4 +1,4 @@
-import { useState } from 'react'; // ✅ ADICIONE ESTA LINHA
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Power } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
@@ -27,7 +27,7 @@ export default function Products() {
     nome: '',
     preco: '',
     quantidade: '',
-    imagem_url: '',
+    imagem: '', // ✅ CORRIGIDO: mudou de imagem_url para imagem
   });
 
   const { data: products = [], isLoading, error } = useQuery({
@@ -84,7 +84,7 @@ export default function Products() {
       nome: formData.nome,
       preco: parseFloat(formData.preco),
       quantidade: parseInt(formData.quantidade),
-      imagem_url: formData.imagem_url || undefined,
+      imagem: formData.imagem || undefined, // ✅ CORRIGIDO
     };
 
     if (editingProduct) {
@@ -100,7 +100,7 @@ export default function Products() {
       nome: product.nome,
       preco: product.preco.toString(),
       quantidade: product.quantidade.toString(),
-      imagem_url: product.imagem_url || '',
+      imagem: product.imagem || '', // ✅ CORRIGIDO
     });
     setDialogOpen(true);
   };
@@ -109,7 +109,6 @@ export default function Products() {
     if (product.status === 'ativo') {
       inactivateMutation.mutate(product.id);
     } else {
-      // Para reativar, usamos update
       updateMutation.mutate({ 
         id: product.id, 
         data: { status: 'ativo' } 
@@ -118,7 +117,7 @@ export default function Products() {
   };
 
   const resetForm = () => {
-    setFormData({ nome: '', preco: '', quantidade: '', imagem_url: '' });
+    setFormData({ nome: '', preco: '', quantidade: '', imagem: '' }); // ✅ CORRIGIDO
     setEditingProduct(null);
   };
 
@@ -196,13 +195,14 @@ export default function Products() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="imagem_url">URL da Imagem (opcional)</Label>
+                  <Label htmlFor="imagem">URL da Imagem (opcional)</Label> {/* ✅ CORRIGIDO */}
                   <Input
-                    id="imagem_url"
-                    name="imagem_url"
+                    id="imagem"
+                    name="imagem" {/* ✅ CORRIGIDO */}
                     type="url"
-                    value={formData.imagem_url}
+                    value={formData.imagem} {/* ✅ CORRIGIDO */}
                     onChange={handleChange}
+                    placeholder="https://exemplo.com/imagem.jpg"
                   />
                 </div>
 
@@ -255,6 +255,20 @@ export default function Products() {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  {/* ✅ ADICIONE A IMAGEM AQUI */}
+                  {product.imagem && (
+                    <div className="mb-4">
+                      <img 
+                        src={product.imagem} 
+                        alt={product.nome}
+                        className="w-full h-32 object-cover rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  
                   <div className="space-y-2 mb-4">
                     <p className="text-2xl font-bold text-primary">
                       R$ {product.preco.toFixed(2)}
