@@ -1,16 +1,14 @@
 import axios from 'axios';
 import type { AuthResponse, RegisterData, LoginData, ActivateData, Product, Sale } from '@/types';
 
-// Configure a URL base do seu backend aqui
-// Esta linha está CORRETA. Ela vai ler a variável do Vercel.
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// ✅ URL corrigida para o backend no Render
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://estoque-web.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  // ✅ Timeout para evitar requisições travadas
   timeout: 10000,
 });
 
@@ -27,20 +25,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // ✅ Tratamento melhorado de erros
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('seller');
       window.location.href = '/auth/login';
     }
     
-    // ✅ Tratamento de erro de rede/CORS
     if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
       console.error('Erro de rede - Verifique a conexão e CORS');
       return Promise.reject(new Error('Erro de conexão. Verifique se o servidor está online.'));
     }
     
-    // ✅ Tratamento de timeout
     if (error.code === 'ECONNABORTED') {
       console.error('Timeout na requisição');
       return Promise.reject(new Error('Tempo limite excedido. Tente novamente.'));
@@ -50,20 +45,20 @@ api.interceptors.response.use(
   }
 );
 
-// Auth APIs (Estavam corretas)
+// ✅ Auth APIs CORRIGIDAS - usando as rotas corretas do backend
 export const authAPI = {
   register: async (data: RegisterData) => {
-    const response = await api.post('/register', data);
+    const response = await api.post('/api/users/register', data); // ✅ Corrigido
     return response.data;
   },
 
   activate: async (data: ActivateData) => {
-    const response = await api.post('/activate', data);
+    const response = await api.post('/api/users/activate', data); // ✅ Corrigido
     return response.data;
   },
 
   login: async (data: LoginData) => {
-    const response = await api.post('/login', data);
+    const response = await api.post('/api/users/login', data); // ✅ Corrigido
     return response.data;
   },
 };
@@ -142,7 +137,7 @@ export const salesAPI = {
   },
 };
 
-// ✅ Adicione uma função para testar a conexão
+// ✅ Função para testar a conexão
 export const testConnection = async () => {
   try {
     const response = await api.get('/health');

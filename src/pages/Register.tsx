@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query'; // ✅ ADICIONE ESTE IMPORT
 import { Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
-import { mockAuthAPI as authAPI } from '@/mocks/mockApi';
 import { toast } from 'sonner';
+import { authAPI } from '@/api'; // ✅ IMPORT DA API
 
 export default function Register() {
   const navigate = useNavigate();
@@ -27,18 +27,16 @@ export default function Register() {
   const registerMutation = useMutation({
     mutationFn: authAPI.register,
     onSuccess: (data, variables) => {
-      // Data é o retorno da API, variables são os dados passados para authAPI.register
       toast.success('Cadastro realizado! Verifique o código enviado via WhatsApp.');
-      navigate('/auth/activate', { state: { email: variables.email } });
+      navigate('/auth/activate', { state: { cnpj: variables.cnpj } }); // ✅ Corrigido para cnpj
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Erro ao realizar cadastro');
+      toast.error(error.response?.data?.erro || 'Erro ao realizar cadastro');
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 🚀 Chama a função de mutação
     registerMutation.mutate(formData);
   };
 
@@ -121,7 +119,7 @@ export default function Register() {
             <Button
               type="submit"
               className="w-full"
-              disabled={registerMutation.isPending} // ✨ Usando o estado de carregamento do useMutation
+              disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
             </Button>

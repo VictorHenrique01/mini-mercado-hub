@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -20,50 +21,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
-import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
+import { productsAPI, salesAPI } from '@/api';
 import { toast } from 'sonner';
 import type { Product, Sale } from '@/types';
 
 export default function Sales() {
-  const queryClient = useQueryClient(); // 🎣 Hook para interagir com o cache
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     produto_id: '',
     quantidade: '',
   });
 
-  // 🚀 Usando useQueries para carregar vendas e produtos em paralelo
-  const results = useQueries({
-    queries: [
-      { queryKey: ['sales'], queryFn: salesAPI.getAll },
-      { queryKey: ['products'], queryFn: productsAPI.getAll },
-    ],
+  const { data: sales = [], isLoading: salesLoading, error: salesError } = useQuery({
+    queryKey: ['sales'],
+    queryFn: salesAPI.getAll,
   });
 
-  const salesQuery = results[0];
-  const productsQuery = results[1];
+  const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery({
+    queryKey: ['products'],
+    queryFn: productsAPI.getAll,
+  });
 
-  const sales: Sale[] = salesQuery.data || [];
-  const allProducts: Product[] = productsQuery.data || [];
-  const products = allProducts.filter((p) => p.status === 'Ativo'); // Filtra apenas ativos
-  const loading = salesQuery.isLoading || productsQuery.isLoading;
-  const isError = salesQuery.isError || productsQuery.isError;
-
-  // 🔄 UseMutation para registrar a venda
   const saleMutation = useMutation({
     mutationFn: salesAPI.create,
     onSuccess: () => {
       toast.success('Venda registrada com sucesso!');
       setDialogOpen(false);
       setFormData({ produto_id: '', quantidade: '' });
-      
-      // ♻️ Invalida as queries de vendas e produtos para forçar um recarregamento
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.detail || 'Erro ao registrar venda');
+      toast.error(error.response?.data?.erro || 'Erro ao registrar venda');
     },
   });
 
@@ -75,14 +65,17 @@ export default function Sales() {
       quantidade: parseInt(formData.quantidade),
     };
     
-    // 🚀 Chama a mutação
     saleMutation.mutate(saleData);
   };
 
   const getProductName = (productId: number) => {
-    const product = allProducts.find((p) => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     return product?.nome || `Produto #${productId}`;
   };
+
+  const activeProducts = products.filter((p) => p.status === 'ativo');
+  const loading = salesLoading || productsLoading;
+  const error = salesError || productsError;
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -100,7 +93,6 @@ export default function Sales() {
             onOpenChange={(open) => {
               setDialogOpen(open);
               if (!open) {
-                // Limpa o formulário ao fechar o diálogo
                 setFormData({ produto_id: '', quantidade: '' });
               }
             }}
@@ -126,21 +118,20 @@ export default function Sales() {
                     onValueChange={(value) =>
                       setFormData({ ...formData, produto_id: value })
                     }
-                    disabled={saleMutation.isPending || productsQuery.isLoading}
+                    disabled={saleMutation.isPending || productsLoading}
                     required
                   >
                     <SelectTrigger>
                       <SelectValue 
                         placeholder={
-                            productsQuery.isLoading ? "Carregando produtos..." : "Selecione um produto"
+                          productsLoading ? "Carregando produtos..." : "Selecione um produto"
                         } 
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {products.map((product) => (
+                      {activeProducts.map((product) => (
                         <SelectItem key={product.id} value={product.id.toString()}>
-                          {product.nome} - R$ {product.preco.toFixed(2)} (Estoque:{' '}
-                          {product.quantidade})
+                          {product.nome} - R$ {product.preco.toFixed(2)} (Estoque: {product.quantidade})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -185,7 +176,7 @@ export default function Sales() {
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando vendas...</p>
           </div>
-        ) : isError ? (
+        ) : error ? (
           <div className="text-center py-12 text-destructive">
             <p>Não foi possível carregar o histórico de vendas. Tente novamente.</p>
           </div>
@@ -218,7 +209,7 @@ export default function Sales() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg text-accent">
+                        <p className="font-bold text-lg text-green-600">
                           R$ {sale.valor_total.toFixed(2)}
                         </p>
                         <p className="text-sm text-muted-foreground">

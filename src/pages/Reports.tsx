@@ -1,20 +1,26 @@
+import { useQueries } from '@tanstack/react-query';
 import { BarChart3, TrendingUp, Package, DollarSign } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// TODO: INTEGRAÇÃO - Trocar para @/services/api quando conectar ao backend real
-import { mockProductsAPI as productsAPI, mockSalesAPI as salesAPI } from '@/mocks/mockApi';
+import { productsAPI, salesAPI } from '@/api';
 import type { Product, Sale } from '@/types';
 
 export default function Reports() {
-  // 🚀 Usando useQueries para carregar produtos e vendas em paralelo
   const results = useQueries({
     queries: [
-      { queryKey: ['products'], queryFn: productsAPI.getAll },
-      { queryKey: ['sales'], queryFn: salesAPI.getAll },
+      { 
+        queryKey: ['products'], 
+        queryFn: productsAPI.getAll,
+        staleTime: 5 * 60 * 1000 // 5 minutos
+      },
+      { 
+        queryKey: ['sales'], 
+        queryFn: salesAPI.getAll,
+        staleTime: 5 * 60 * 1000 // 5 minutos
+      },
     ],
   });
 
-  // Extrai os dados e estados
   const productsQuery = results[0];
   const salesQuery = results[1];
 
@@ -23,14 +29,10 @@ export default function Reports() {
   const loading = productsQuery.isLoading || salesQuery.isLoading;
   const isError = productsQuery.isError || salesQuery.isError;
 
-  if (isError) {
-    console.error('Erro ao carregar dados:', productsQuery.error || salesQuery.error);
-  }
-
-  // Métricas gerais (Cálculos permanecem os mesmos, agora sobre os dados do Query)
+  // Métricas gerais
   const totalRevenue = sales.reduce((acc, s) => acc + s.valor_total, 0);
   const totalProducts = products.length;
-  const activeProducts = products.filter((p) => p.status === 'Ativo').length;
+  const activeProducts = products.filter((p) => p.status === 'ativo').length;
   const totalStock = products.reduce((acc, p) => acc + p.quantidade, 0);
 
   // Produtos mais vendidos
@@ -61,8 +63,8 @@ export default function Reports() {
 
   // Produtos com baixo estoque
   const lowStockProducts = products
-    .filter((p) => p.status === 'Ativo' && p.quantidade < 10)
-    .sort((a, b) => a.quantidade - b.quantidade)
+    .filter((p) => p.status === 'ativo' && p.quantidade < 10)
+    .sort((a, b) => a.quantidade - b.quantitude)
     .slice(0, 5);
 
   return (
@@ -92,7 +94,7 @@ export default function Reports() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                    <DollarSign className="h-4 w-4 text-success" />
+                    <DollarSign className="h-4 w-4 text-green-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
@@ -114,7 +116,7 @@ export default function Reports() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Estoque Total</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-accent" />
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{totalStock}</div>
@@ -163,7 +165,7 @@ export default function Reports() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-success">
+                          <p className="font-bold text-green-600">
                             R$ {product.revenue.toFixed(2)}
                           </p>
                         </div>
@@ -202,7 +204,7 @@ export default function Reports() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-warning">
+                          <p className="font-bold text-yellow-600">
                             {product.quantidade} unidades
                           </p>
                           <p className="text-xs text-muted-foreground">Estoque baixo</p>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // ✅ Adicionei useState
 import { useNavigate } from 'react-router-dom';
 import { Store, Package, ShoppingCart, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,19 @@ import { useAuth } from '@/contexts/AuthContext';
 const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const [mounted, setMounted] = useState(false); // ✅ Estado para controle
 
   useEffect(() => {
+    setMounted(true);
     if (isAuthenticated) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  // Evita renderização antes da verificação de autenticação
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">

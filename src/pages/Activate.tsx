@@ -1,33 +1,42 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query'; // ✅ ADICIONE ESTE IMPORT
 import { Store, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authAPI } from '@/services/api';
+import { authAPI } from '@/api'; // ✅ CORRIGIDO IMPORT
 import { toast } from 'sonner';
 
 export default function Activate() {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email || '';
-  const [loading, setLoading] = useState(false);
+  const cnpj = location.state?.cnpj || ''; // ✅ CORRIGIDO: cnpj em vez de email
   const [codigo, setCodigo] = useState('');
+
+  // ✅ USE MUTATION PARA ATIVAÇÃO
+  const activateMutation = useMutation({
+    mutationFn: authAPI.activate,
+    onSuccess: () => {
+      toast.success('Conta ativada com sucesso!');
+      navigate('/auth/login');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.erro || 'Código inválido');
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      await authAPI.activate({ email, codigo });
-      toast.success('Conta ativada com sucesso!');
-      navigate('/auth/login');
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Código inválido');
-    } finally {
-      setLoading(false);
+    
+    if (!cnpj) {
+      toast.error('CNPJ não encontrado. Volte para o cadastro.');
+      return;
     }
+
+    // ✅ ENVIA CNPJ EM VEZ DE EMAIL
+    activateMutation.mutate({ cnpj, codigo });
   };
 
   return (
@@ -42,6 +51,7 @@ export default function Activate() {
           <CardTitle className="text-2xl font-bold">Ativar Conta</CardTitle>
           <CardDescription>
             Digite o código de 4 dígitos enviado para seu WhatsApp
+            {cnpj && <div className="mt-2 text-xs">CNPJ: {cnpj}</div>}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -54,14 +64,18 @@ export default function Activate() {
                 placeholder="0000"
                 maxLength={4}
                 value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
+                onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} // ✅ Só números
                 className="text-center text-2xl tracking-widest"
                 required
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Ativando...' : 'Ativar Conta'}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={activateMutation.isPending || !cnpj}
+            >
+              {activateMutation.isPending ? 'Ativando...' : 'Ativar Conta'}
             </Button>
 
             <div className="text-center text-sm">
