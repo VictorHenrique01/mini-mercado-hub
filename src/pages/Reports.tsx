@@ -32,7 +32,7 @@ export default function Reports() {
   // Métricas gerais
   const totalRevenue = sales.reduce((acc, s) => acc + s.valor_total, 0);
   const totalProducts = products.length;
-  const activeProducts = products.filter((p) => p.status === 'ativo').length;
+  const activeProducts = products.filter((p) => p.status === 'Ativo').length;
   const totalStock = products.reduce((acc, p) => acc + p.quantidade, 0);
 
   // Produtos mais vendidos
@@ -63,8 +63,8 @@ export default function Reports() {
 
   // Produtos com baixo estoque
   const lowStockProducts = products
-    .filter((p) => p.status === 'ativo' && p.quantidade < 10)
-    .sort((a, b) => a.quantidade - b.quantitude)
+    .filter((p) => p.status === 'Ativo' && p.quantidade < 10)
+    .sort((a, b) => a.quantidade - b.quantidade)
     .slice(0, 5);
 
   return (

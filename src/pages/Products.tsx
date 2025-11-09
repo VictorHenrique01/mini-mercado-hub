@@ -106,12 +106,12 @@ export default function Products() {
   };
 
   const handleToggleStatus = async (product: Product) => {
-    if (product.status === 'ativo') {
+    if (product.status === 'Ativo') {
       inactivateMutation.mutate(product.id);
     } else {
       updateMutation.mutate({ 
         id: product.id, 
-        data: { status: 'ativo' } 
+        data: { status: 'Ativo' } 
       });
     }
   };
@@ -249,7 +249,7 @@ export default function Products() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{product.nome}</CardTitle>
-                    <Badge variant={product.status === 'ativo' ? 'default' : 'secondary'}>
+                    <Badge variant={product.status === 'Ativo' ? 'default' : 'secondary'}>
                       {product.status}
                     </Badge>
                   </div>
@@ -290,7 +290,7 @@ export default function Products() {
                     </Button>
                     <Button
                       size="sm"
-                      variant={product.status === 'ativo' ? 'destructive' : 'default'}
+                      variant={product.status === 'Ativo' ? 'destructive' : 'default'}
                       onClick={() => handleToggleStatus(product)}
                       disabled={isLoadingMutation}
                     >

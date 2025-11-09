@@ -73,7 +73,7 @@ export default function Sales() {
     return product?.nome || `Produto #${productId}`;
   };
 
-  const activeProducts = products.filter((p) => p.status === 'ativo');
+  const activeProducts = products.filter((p) => p.status === 'Ativo');
   const loading = salesLoading || productsLoading;
   const error = salesError || productsError;
 

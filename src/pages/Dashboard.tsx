@@ -20,7 +20,7 @@ export default function Dashboard() {
   const products = productsData || [];
   const sales = salesData || [];
 
-  const activeProducts = products.filter((p) => p.status === 'ativo').length;
+  const activeProducts = products.filter((p) => p.status === 'Ativo').length;
   const totalStock = products.reduce((acc, p) => acc + p.quantidade, 0);
   const totalSales = sales.length;
   const totalRevenue = sales.reduce((acc, s) => acc + s.valor_total, 0);
