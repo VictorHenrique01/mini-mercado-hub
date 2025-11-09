@@ -27,7 +27,7 @@ export default function Products() {
     nome: '',
     preco: '',
     quantidade: '',
-    imagem: '', // ✅ CORRIGIDO: mudou de imagem_url para imagem
+    imagem: '',
   });
 
   const { data: products = [], isLoading, error } = useQuery({
@@ -84,7 +84,7 @@ export default function Products() {
       nome: formData.nome,
       preco: parseFloat(formData.preco),
       quantidade: parseInt(formData.quantidade),
-      imagem: formData.imagem || undefined, // ✅ CORRIGIDO
+      imagem: formData.imagem || undefined,
     };
 
     if (editingProduct) {
@@ -100,7 +100,7 @@ export default function Products() {
       nome: product.nome,
       preco: product.preco.toString(),
       quantidade: product.quantidade.toString(),
-      imagem: product.imagem || '', // ✅ CORRIGIDO
+      imagem: product.imagem || '',
     });
     setDialogOpen(true);
   };
@@ -117,7 +117,7 @@ export default function Products() {
   };
 
   const resetForm = () => {
-    setFormData({ nome: '', preco: '', quantidade: '', imagem: '' }); // ✅ CORRIGIDO
+    setFormData({ nome: '', preco: '', quantidade: '', imagem: '' });
     setEditingProduct(null);
   };
 
@@ -195,12 +195,12 @@ export default function Products() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="imagem">URL da Imagem (opcional)</Label> {/* ✅ CORRIGIDO */}
+                  <Label htmlFor="imagem">URL da Imagem (opcional)</Label>
                   <Input
                     id="imagem"
-                    name="imagem" {/* ✅ CORRIGIDO */}
+                    name="imagem"
                     type="url"
-                    value={formData.imagem} {/* ✅ CORRIGIDO */}
+                    value={formData.imagem}
                     onChange={handleChange}
                     placeholder="https://exemplo.com/imagem.jpg"
                   />
@@ -255,7 +255,6 @@ export default function Products() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* ✅ ADICIONE A IMAGEM AQUI */}
                   {product.imagem && (
                     <div className="mb-4">
                       <img 
