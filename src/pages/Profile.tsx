@@ -1,4 +1,4 @@
-import { useState } from 'react'; // ✅ ADICIONE ESTA LINHA  
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { User, AlertTriangle } from 'lucide-react';
@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 export default function Profile() {
   const navigate = useNavigate();
   const { seller, logout, updateSeller } = useAuth();
+
+  // Sincroniza o form quando o seller muda (por ex. após login/atualização)
   const [formData, setFormData] = useState({
     nome: seller?.nome || '',
     cnpj: seller?.cnpj || '',
@@ -22,11 +24,23 @@ export default function Profile() {
     celular: seller?.celular || '',
   });
 
+  useEffect(() => {
+    setFormData({
+      nome: seller?.nome || '',
+      cnpj: seller?.cnpj || '',
+      email: seller?.email || '',
+      celular: seller?.celular || '',
+    });
+  }, [seller]);
+
+  // Atualização de perfil — espera que o backend exponha PATCH /api/users/me
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      usersAPI.update(id, data),
-    onSuccess: (data) => {
-      updateSeller(data.usuario || data);
+    // mutationFn recebe o payload diretamente — aqui usamos apenas os dados do form
+    mutationFn: (data: any) => usersAPI.updateMe(data),
+    onSuccess: (res: any) => {
+      // backend deve retornar { user: {...} } — se não retornar, aceita res direto
+      const userPayload = res?.user || res;
+      updateSeller(userPayload);
       toast.success('Perfil atualizado com sucesso!');
     },
     onError: (error: any) => {
@@ -34,8 +48,9 @@ export default function Profile() {
     },
   });
 
+  // Inativação de conta — espera POST /api/users/deactivate (sem id)
   const inactivateMutation = useMutation({
-    mutationFn: usersAPI.inactivate,
+    mutationFn: () => usersAPI.deactivate(),
     onSuccess: () => {
       toast.success('Conta inativada com sucesso');
       logout();
@@ -52,14 +67,25 @@ export default function Profile() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!seller) return;
+    // validar mínimo
+    if (!formData.nome || !formData.email || !formData.celular) {
+      toast.error('Preencha todos os campos obrigatórios.');
+      return;
+    }
 
-    updateMutation.mutate({ id: seller.id, data: formData });
+    // enviar apenas os campos permitidos
+    const payload = {
+      nome: formData.nome,
+      email: formData.email,
+      celular: formData.celular,
+    };
+
+    updateMutation.mutate(payload);
   };
 
   const handleInactivate = () => {
-    if (!seller) return;
-    inactivateMutation.mutate(seller.id);
+    // confirmação já é tratada pelo AlertDialog; só dispara a mutation
+    inactivateMutation.mutate();
   };
 
   if (!seller) {
