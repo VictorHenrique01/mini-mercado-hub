@@ -11,12 +11,18 @@ export default function Reports() {
       { 
         queryKey: ['products'], 
         queryFn: productsAPI.getAll,
-        staleTime: 5 * 60 * 1000 // 5 minutos
+        retry: 3, // ✅ Retry inteligente
+        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
       },
       { 
         queryKey: ['sales'], 
         queryFn: salesAPI.getAll,
-        staleTime: 5 * 60 * 1000 // 5 minutos
+        retry: 3,
+        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
       },
     ],
   });
@@ -80,6 +86,9 @@ export default function Reports() {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando relatórios...</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Aguardando servidor... (pode levar até 1 minuto)
+            </p>
           </div>
         ) : isError ? (
           <div className="text-center py-12 text-destructive">

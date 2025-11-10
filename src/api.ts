@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 60000, // ✅ 60 segundos para primeira requisição (servidor hibernando)
 });
 
 // Interceptor para adicionar token JWT em todas as requisições
@@ -32,13 +32,21 @@ api.interceptors.response.use(
     }
     
     if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
-      console.error('Erro de rede - Verifique a conexão e CORS');
-      return Promise.reject(new Error('Erro de conexão. Verifique se o servidor está online.'));
+      console.warn('⚠️ Erro de rede detectado');
+      return Promise.reject({ 
+        ...error,
+        message: 'Erro de conexão. Verifique se o servidor está online.',
+        isNetworkError: true 
+      });
     }
     
     if (error.code === 'ECONNABORTED') {
-      console.error('Timeout na requisição');
-      return Promise.reject(new Error('Tempo limite excedido. Tente novamente.'));
+      console.warn('⏱️ Timeout detectado - Servidor pode estar iniciando');
+      return Promise.reject({ 
+        ...error,
+        message: 'Servidor iniciando, aguarde...',
+        isTimeout: true 
+      });
     }
     
     return Promise.reject(error);

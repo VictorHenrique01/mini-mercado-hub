@@ -55,8 +55,19 @@ export default function Login() {
     },
     onError: (error: any) => {
       console.error('❌ Login error:', error);
-      console.error('❌ Error response:', error.response);
-      console.error('❌ Error message:', error.message);
+      
+      // ✅ Mensagem amigável para timeouts
+      if (error.isTimeout) {
+        toast.error('Servidor iniciando, aguarde um momento e tente novamente...', {
+          duration: 5000,
+        });
+        return;
+      }
+      
+      if (error.isNetworkError) {
+        toast.error('Erro de conexão. Verifique sua internet.');
+        return;
+      }
       
       const errorMessage = error.response?.data?.erro || error.response?.data?.detail || error.message || 'Erro ao fazer login';
       toast.error(errorMessage);

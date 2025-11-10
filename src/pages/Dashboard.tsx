@@ -9,11 +9,19 @@ export default function Dashboard() {
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
     queryFn: productsAPI.getAll,
+    retry: 3, // ✅ Tentar 3 vezes antes de falhar
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // ✅ Backoff exponencial
+    staleTime: 5 * 60 * 1000, // ✅ 5 minutos - evita refetch desnecessário
+    refetchOnWindowFocus: false, // ✅ Não refazer ao trocar de aba
   });
 
   const { data: salesData, isLoading: salesLoading } = useQuery({
     queryKey: ['sales'],
     queryFn: salesAPI.getAll,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const loading = productsLoading || salesLoading;
@@ -94,6 +102,9 @@ export default function Dashboard() {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando dados...</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Se o servidor estiver hibernando, pode levar até 1 minuto
+            </p>
           </div>
         ) : (
           <>
