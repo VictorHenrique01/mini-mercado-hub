@@ -64,7 +64,17 @@ export default function Sales() {
       produto_id: parseInt(formData.produto_id),
       quantidade: parseInt(formData.quantidade),
     };
-    
+
+    // validação mínima no front (opcional, service também valida)
+    if (!saleData.produto_id || isNaN(saleData.produto_id)) {
+      toast.error('Selecione um produto válido.');
+      return;
+    }
+    if (!saleData.quantidade || isNaN(saleData.quantidade) || saleData.quantidade <= 0) {
+      toast.error('Informe uma quantidade válida (maior que 0).');
+      return;
+    }
+
     saleMutation.mutate(saleData);
   };
 
@@ -73,9 +83,33 @@ export default function Sales() {
     return product?.nome || `Produto #${productId}`;
   };
 
-  const activeProducts = products.filter((p) => p.status === 'Ativo');
+  // filtro case-insensitive para 'Ativo'
+  const activeProducts = products.filter((p) => {
+    const s = (p?.status || '').toString().trim().toLowerCase();
+    return s === 'ativo';
+  });
+
   const loading = salesLoading || productsLoading;
   const error = salesError || productsError;
+
+  // calcula valor total de forma segura
+  const getSaleValorTotal = (sale: Sale) => {
+    // backend pode devolver valor_total; senão, calcular a partir de preco_vendido * quantidade
+    const backendTotal = (sale as any).valor_total;
+    const precoVendido = (sale as any).preco_vendido;
+    const quantidade = sale.quantidade ?? 0;
+
+    if (backendTotal !== undefined && backendTotal !== null && !isNaN(Number(backendTotal))) {
+      return Number(backendTotal);
+    }
+
+    if (precoVendido !== undefined && precoVendido !== null && !isNaN(Number(precoVendido))) {
+      return Number(precoVendido) * Number(quantidade);
+    }
+
+    // fallback 0
+    return 0;
+  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -131,7 +165,7 @@ export default function Sales() {
                     <SelectContent>
                       {activeProducts.map((product) => (
                         <SelectItem key={product.id} value={product.id.toString()}>
-                          {product.nome} - R$ {product.preco.toFixed(2)} (Estoque: {product.quantidade})
+                          {product.nome} - R$ {Number(product.preco).toFixed(2)} (Estoque: {product.quantidade})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -210,7 +244,7 @@ export default function Sales() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-lg text-green-600">
-                          R$ {sale.valor_total.toFixed(2)}
+                          R$ {getSaleValorTotal(sale).toFixed(2)}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {sale.quantidade} {sale.quantidade === 1 ? 'unidade' : 'unidades'}
