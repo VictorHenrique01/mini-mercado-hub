@@ -76,7 +76,7 @@ export const usersAPI = {
   },
 
   inactivate: async (id: number) => {
-    const response = await api.post(`/api/users/${id}/inactivate`);
+    const response = await api.delete(`/api/users/${id}`);
     return response.data;
   },
 };
