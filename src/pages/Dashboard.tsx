@@ -17,15 +17,69 @@ export default function Dashboard() {
   });
 
   const loading = productsLoading || salesLoading;
-  const products = productsData || [];
-  const sales = salesData || [];
+  const products: Product[] = Array.isArray(productsData) ? productsData : [];
+  const sales: Sale[] = Array.isArray(salesData) ? salesData : [];
 
-  const activeProducts = products.filter((p) => p.status === 'Ativo').length;
-  const totalStock = products.reduce((acc, p) => acc + p.quantidade, 0);
+  // utilitário: formata valores monetários de forma segura
+  const safeNumber = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const formatMoney = (v: unknown) => {
+    const n = safeNumber(v);
+    return n.toFixed(2);
+  };
+
+  const formatDate = (iso?: string | null) => {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('pt-BR');
+  };
+
+  // calcula o total de cada venda de forma defensiva:
+  const getSaleTotal = (s: Sale) => {
+    // backend pode devolver valor_total
+    if (s && (s as any).valor_total !== undefined && (s as any).valor_total !== null) {
+      const n = Number((s as any).valor_total);
+      if (Number.isFinite(n)) return n;
+    }
+
+    // fallback: preco_vendido * quantidade
+    const preco = safeNumber((s as any).preco_vendido);
+    const qtd = safeNumber(s?.quantidade);
+    return preco * qtd;
+  };
+
+  // Produtos ativos: case-insensitive
+  const activeProducts = products.filter((p) => {
+    const s = (p?.status || '').toString().trim().toLowerCase();
+    return s === 'ativo';
+  }).length;
+
+  // Estoque total (seguro)
+  const totalStock = products.reduce((acc, p) => {
+    const q = safeNumber((p as any).quantidade);
+    return acc + q;
+  }, 0);
+
+  // Total de vendas
   const totalSales = sales.length;
-  const totalRevenue = sales.reduce((acc, s) => acc + s.valor_total, 0);
 
-  const recentSales = sales.slice(0, 5);
+  // Receita total (soma defensiva)
+  const totalRevenue = sales.reduce((acc, s) => {
+    return acc + getSaleTotal(s);
+  }, 0);
+
+  const recentSales = Array.isArray(sales) ? sales.slice(0, 5) : [];
+
+  // pegar nome do produto se disponível no objeto sale.produto ou via products list
+  const getProductName = (sale: Sale) => {
+    const prodFromSale = (sale as any).produto;
+    if (prodFromSale && prodFromSale.nome) return prodFromSale.nome;
+    const prod = products.find((p) => p.id === (sale as any).produto_id);
+    return prod?.nome || `Produto #${(sale as any).produto_id ?? '?'}`;
+  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -86,7 +140,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    R$ {totalRevenue.toFixed(2)}
+                    R$ {formatMoney(totalRevenue)}
                   </div>
                   <p className="text-xs text-muted-foreground">em vendas totais</p>
                 </CardContent>
@@ -111,15 +165,15 @@ export default function Dashboard() {
                         className="flex items-center justify-between border-b pb-4 last:border-0"
                       >
                         <div>
-                          <p className="font-medium">Produto #{sale.produto_id}</p>
+                          <p className="font-medium">{getProductName(sale)}</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(sale.created_at).toLocaleDateString('pt-BR')}
+                            {formatDate((sale as any).created_at)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">R$ {sale.valor_total.toFixed(2)}</p>
+                          <p className="font-medium">R$ {formatMoney(getSaleTotal(sale))}</p>
                           <p className="text-sm text-muted-foreground">
-                            {sale.quantidade} unidades
+                            {safeNumber((sale as any).quantidade)} {safeNumber((sale as any).quantidade) === 1 ? 'unidade' : 'unidades'}
                           </p>
                         </div>
                       </div>
