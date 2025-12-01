@@ -6,17 +6,43 @@ import { productsAPI, salesAPI } from '@/api';
 import type { Product, Sale } from '@/types';
 
 export default function Reports() {
+  // ✅ Função defensiva para converter valores para número
+  const safeNumber = (value: any): number => {
+    const num = Number(value);
+    return isNaN(num) || !isFinite(num) ? 0 : num;
+  };
+
+  // ✅ Função para calcular o total de uma venda com fallbacks
+  const getSaleTotal = (sale: Sale): number => {
+    // Tenta usar valor_total se existir e for válido
+    if (sale.valor_total !== undefined && sale.valor_total !== null) {
+      const total = safeNumber(sale.valor_total);
+      if (total > 0) return total;
+    }
+    
+    // Senão, calcula preco_vendido * quantidade
+    const preco = safeNumber((sale as any).preco_vendido);
+    const quantidade = safeNumber(sale.quantidade);
+    return preco * quantidade;
+  };
+
   const results = useQueries({
     queries: [
       { 
         queryKey: ['products'], 
         queryFn: productsAPI.getAll,
-        staleTime: 5 * 60 * 1000 // 5 minutos
+        retry: 3,
+        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
       },
       { 
         queryKey: ['sales'], 
         queryFn: salesAPI.getAll,
-        staleTime: 5 * 60 * 1000 // 5 minutos
+        retry: 3,
+        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
       },
     ],
   });
@@ -29,13 +55,13 @@ export default function Reports() {
   const loading = productsQuery.isLoading || salesQuery.isLoading;
   const isError = productsQuery.isError || salesQuery.isError;
 
-  // Métricas gerais
-  const totalRevenue = sales.reduce((acc, s) => acc + s.valor_total, 0);
+  // ✅ Métricas gerais com proteção contra NaN
+  const totalRevenue = sales.reduce((acc, s) => acc + getSaleTotal(s), 0);
   const totalProducts = products.length;
   const activeProducts = products.filter((p) => p.status === 'Ativo').length;
-  const totalStock = products.reduce((acc, p) => acc + p.quantidade, 0);
+  const totalStock = products.reduce((acc, p) => acc + safeNumber(p.quantidade), 0);
 
-  // Produtos mais vendidos
+  // ✅ Produtos mais vendidos com proteção contra NaN
   const productSalesMap = new Map<
     number,
     { name: string; quantity: number; revenue: number }
@@ -51,8 +77,8 @@ export default function Reports() {
       };
       productSalesMap.set(sale.produto_id, {
         name: product.nome,
-        quantity: existing.quantity + sale.quantidade,
-        revenue: existing.revenue + sale.valor_total,
+        quantity: existing.quantity + safeNumber(sale.quantidade),
+        revenue: existing.revenue + getSaleTotal(sale),
       });
     }
   });
@@ -61,10 +87,10 @@ export default function Reports() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
 
-  // Produtos com baixo estoque
+  // ✅ Produtos com baixo estoque com proteção
   const lowStockProducts = products
-    .filter((p) => p.status === 'Ativo' && p.quantidade < 10)
-    .sort((a, b) => a.quantidade - b.quantidade)
+    .filter((p) => p.status === 'Ativo' && safeNumber(p.quantidade) < 10)
+    .sort((a, b) => safeNumber(a.quantidade) - safeNumber(b.quantidade))
     .slice(0, 5);
 
   return (
@@ -80,6 +106,9 @@ export default function Reports() {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando relatórios...</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Aguardando servidor... (pode levar até 1 minuto)
+            </p>
           </div>
         ) : isError ? (
           <div className="text-center py-12 text-destructive">
@@ -97,7 +126,7 @@ export default function Reports() {
                     <DollarSign className="h-4 w-4 text-green-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">R$ {safeNumber(totalRevenue).toFixed(2)}</div>
                     <p className="text-xs text-muted-foreground">Todas as vendas</p>
                   </CardContent>
                 </Card>
@@ -119,7 +148,7 @@ export default function Reports() {
                     <TrendingUp className="h-4 w-4 text-blue-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{totalStock}</div>
+                    <div className="text-2xl font-bold">{safeNumber(totalStock)}</div>
                     <p className="text-xs text-muted-foreground">unidades</p>
                   </CardContent>
                 </Card>
@@ -161,12 +190,12 @@ export default function Reports() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {product.quantity} unidades vendidas
+                            {safeNumber(product.quantity)} unidades vendidas
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-green-600">
-                            R$ {product.revenue.toFixed(2)}
+                            R$ {safeNumber(product.revenue).toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -200,12 +229,12 @@ export default function Reports() {
                         <div>
                           <p className="font-medium">{product.nome}</p>
                           <p className="text-sm text-muted-foreground">
-                            R$ {product.preco.toFixed(2)}
+                            R$ {safeNumber(product.preco).toFixed(2)}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-yellow-600">
-                            {product.quantidade} unidades
+                            {safeNumber(product.quantidade)} unidades
                           </p>
                           <p className="text-xs text-muted-foreground">Estoque baixo</p>
                         </div>

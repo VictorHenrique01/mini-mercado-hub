@@ -36,11 +36,19 @@ export default function Sales() {
   const { data: sales = [], isLoading: salesLoading, error: salesError } = useQuery({
     queryKey: ['sales'],
     queryFn: salesAPI.getAll,
+    retry: 3, // ✅ Retry inteligente
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['products'],
     queryFn: productsAPI.getAll,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const saleMutation = useMutation({
@@ -53,6 +61,13 @@ export default function Sales() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (error: any) => {
+      // ✅ Mensagens amigáveis para timeouts
+      if (error.isTimeout) {
+        toast.error('Servidor iniciando, tente novamente em alguns segundos...', {
+          duration: 5000,
+        });
+        return;
+      }
       toast.error(error.response?.data?.erro || 'Erro ao registrar venda');
     },
   });
@@ -209,6 +224,9 @@ export default function Sales() {
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Carregando vendas...</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Aguardando servidor... (primeira vez pode levar até 1 minuto)
+            </p>
           </div>
         ) : error ? (
           <div className="text-center py-12 text-destructive">

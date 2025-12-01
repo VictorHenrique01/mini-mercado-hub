@@ -33,6 +33,10 @@ export default function Products() {
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: productsAPI.getAll,
+    retry: 3, // ✅ Retry inteligente
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const createMutation = useMutation({
