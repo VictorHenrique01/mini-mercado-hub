@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { AuthResponse, RegisterData, LoginData, ActivateData, Product, Sale } from '@/types';
 
 // ✅ URL corrigida para o backend no Render
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://estoque-web.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://estoque-web-3513.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
